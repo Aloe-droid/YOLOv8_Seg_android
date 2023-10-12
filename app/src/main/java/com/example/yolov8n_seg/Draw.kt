@@ -25,11 +25,10 @@ interface Draw {
             val textPoint = Point(box.x.toDouble(), box.y.toDouble() - 5)
             val text = "${labels[it.index]} ${round(it.confidence * 100).toInt()}%"
 
-            Imgproc.rectangle(mat, box, color, 2)
-            Imgproc.putText(mat, text, textPoint, Imgproc.FONT_HERSHEY_SIMPLEX, 1.0, color, 2)
+            Imgproc.rectangle(maskImg, box, color, 5)
+            Imgproc.putText(maskImg, text, textPoint, Imgproc.FONT_HERSHEY_SIMPLEX, 1.0, color, 5)
 
             val cropMask = it.maskMat
-
             val cropMaskImg = Mat(maskImg, box)
             val cropMaskRGB = Mat(cropMask.size(), CvType.CV_8UC3)
             val list = List(3) { cropMask.clone() }
@@ -44,12 +43,10 @@ interface Draw {
             Core.multiply(cropMaskRGB, color, temp2)
             Core.add(cropMaskImg, temp2, cropMaskImg)
 
-            cropMask.release()
             cropMaskImg.release()
             temp1.release()
             temp2.release()
             cropMaskRGB.release()
-            it.maskMat.release()
             list.forEach { mat -> mat.release() }
         }
 

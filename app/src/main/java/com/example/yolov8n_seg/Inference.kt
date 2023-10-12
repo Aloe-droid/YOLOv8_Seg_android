@@ -26,15 +26,14 @@ interface Inference : Load, Segment {
         const val OUTPUT_SIZE = 8400
         const val OUTPUT_MASK_SIZE = 160
 
-        const val CONFIDENCE_THRESHOLD = 0.3f
+        const val CONFIDENCE_THRESHOLD = 0.5f
         const val NMS_THRESHOLD = 0.5f
     }
 
     fun detect(mat: Mat, net: Net, labels: Array<String>): MutableList<Result> {
 
-        val inputMat = Mat()
-        Imgproc.resize(mat, inputMat, Size(INPUT_SIZE.toDouble(), INPUT_SIZE.toDouble()))
-        Imgproc.cvtColor(inputMat, inputMat, Imgproc.COLOR_RGBA2RGB)
+        val inputMat = mat.clone()
+        Imgproc.resize(inputMat, inputMat, Size(INPUT_SIZE.toDouble(), INPUT_SIZE.toDouble()))
         inputMat.convertTo(inputMat, CvType.CV_32FC3)
         val blob = Dnn.blobFromImage(inputMat, SCALE_FACTOR)
         net.setInput(blob)

@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.JavaCameraView
 import org.opencv.android.OpenCVLoader
@@ -29,6 +32,8 @@ class MainActivity : ComponentActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     private lateinit var net: Net
     private lateinit var labels: Array<String>
+    private var results = mutableListOf<Result>()
+    private var isDetect = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,11 +43,9 @@ class MainActivity : ComponentActivity(), CameraBridgeViewBase.CvCameraViewListe
             setCameraPermissionGranted()
             enableView()
             setCvCameraViewListener(this@MainActivity)
-            setMaxFrameSize(640, 640)
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
             )
-
         }
 
         net = loadModel(assets, filesDir.toString())
@@ -80,13 +83,21 @@ class MainActivity : ComponentActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
         val frameMat = inputFrame!!.rgba()
-
-        val results = detect(frameMat, net, labels)
         Imgproc.cvtColor(frameMat, frameMat, Imgproc.COLOR_RGBA2RGB)
-        val outMat = drawSeg(frameMat, results, labels)
 
-        frameMat.release()
-        return outMat
+        lifecycleScope.launch(Dispatchers.Default) {
+            if (isDetect) return@launch
+
+            isDetect = true
+            val inputMat = frameMat.clone()
+            val detections = detect(inputMat, net, labels)
+            results = detections
+
+            inputMat.release()
+            isDetect = false
+        }
+
+        return drawSeg(frameMat, results, labels)
     }
 }
 
