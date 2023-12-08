@@ -1,5 +1,6 @@
 package com.example.yolov8n_seg
 
+import android.util.Log
 import org.opencv.core.Core
 import org.opencv.core.CvType
 import org.opencv.core.Mat
@@ -75,7 +76,7 @@ interface Inference : Load, Segment {
         val indexes = Array(detections.rows()) { 0 }
 
         for (i in 0 until detections.rows()) {
-            val scores = detections.row(i).colRange(4, labelSize)
+            val scores = detections.row(i).colRange(4, 4 + labelSize)
             val max = Core.minMaxLoc(scores)
             val xPos = detections.get(i, 0)[0]
             val yPos = detections.get(i, 1)[0]
@@ -102,7 +103,7 @@ interface Inference : Load, Segment {
         if (indices.total().toInt() == 0) return list
 
         indices.toList().forEach {
-            val scores = detections.row(it).colRange(4, labelSize)
+            val scores = detections.row(it).colRange(4, 4 + labelSize)
             val max = Core.minMaxLoc(scores)
 
             val xPos = detections.get(it, 0)[0]
@@ -134,11 +135,11 @@ interface Inference : Load, Segment {
             var w = (box.width * width / INPUT_SIZE)
             var h = (box.height * height / INPUT_SIZE)
 
-            if(w > width) w = width
-            if(h > height) h = height
+            if (w > width) w = width
+            if (h > height) h = height
 
-            if(x + w > width) w = width - x
-            if(y + h > height) h = height - y
+            if (x + w > width) w = width - x
+            if (y + h > height) h = height - y
 
             val rect = Rect(x, y, w, h)
             it.box = rect
